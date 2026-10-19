@@ -1,34 +1,36 @@
-# Gestor de Tareas y Buscador Pokémon 🚀
+# Gestor de Tareas & Buscador Pokémon 🚀
 
-Aplicación web integrada desarrollada con **Spring Boot** en el backend y **HTML/CSS/JavaScript (Vanilla)** en el frontend. El proyecto combina un gestor de tareas práctico con un módulo interactivo para explorar la PokeAPI de forma fluida.
+Aplicación web desarrollada con **Spring Boot** en el backend y **HTML/CSS/JavaScript (Vanilla)** en el frontend. El proyecto integra un sistema de gestión de tareas junto con un explorador interactivo que consume la PokeAPI.
 
 ---
 
-## ✨ Características Principales
+## 📌 Módulos del Proyecto
 
-* **Gestor de Tareas:** Módulo inicial integrado para la organización y control de tareas.
-* **Universo Pokémon:** Sección interactiva que consume la PokeAPI para explorar tres categorías:
-  * 🔴 **Pokémon**
-  * 🔵 **Berries**
-  * 🟢 **Items**
-* **Scroll Infinito (Carga Progresiva):** Sistema optimizado que carga los elementos en bloques conforme el usuario baja por la página, evitando problemas de rendimiento al consultar una gran cantidad de datos.
-* **Buscador con Debounce:** Permite filtrar los elementos cargados en tiempo real tras un breve retraso en la escritura.
-* **Modales Detallados:** Ventanas emergentes con información técnica específica de cada Pokémon, baya o ítem (estadísticas, tipos, costos, etc.).
-* **Diseño Moderno y Limpio:** Interfaz basada en **Bootstrap 5** con un estilo visual neutro, limpio y profesional.
+### 1. 📝 Gestor de Tareas
+* Administración y control de tareas para organizar actividades diarias.
+* Interfaz intuitiva y funcional conectada al backend en Spring Boot.
+
+### 2. 🔴 Buscador Pokémon (PokeAPI)
+* **Exploración por categorías:** Consulta de Pokémon, Berries (Bayas) e Items.
+* **Scroll Infinito (Carga Progresiva):** Sistema dinámico que carga elementos en bloques conforme se desplaza la página, optimizando el rendimiento y evitando saturar la API.
+* **Buscador con Debounce:** Filtrado de resultados en tiempo real tras una pausa en la escritura.
+* **Modales de Información:** Ventanas emergentes con detalles específicos de cada elemento (imágenes en alta definición, tipos, peso, altura, costo, etc.).
+* **Diseño Limpio:** Interfaz moderna y neutral desarrollada con Bootstrap 5.
 
 ---
 
 ## 🛠️ Tecnologías Utilizadas
 
-* **Backend:** Spring Boot, Java.
+* **Backend:** Java, Spring Boot.
 * **Frontend:** HTML5, CSS3, JavaScript (Vanilla).
-* **Framework CSS:** Bootstrap 5.3.3.
+* **Estilos:** Bootstrap 5.3.3.
 * **API Externa:** PokeAPI (`https://pokeapi.co/`).
 
 ---
 
-## ⚙️ Cómo Ejecutar el Proyecto Localmente
+## ⚙️ Cómo Ejecutar la Aplicación
 
-1. **Clonar el repositorio:**
-   ```bash
-   git clone [https://github.com/Mate0Males/Proyecto-vanilla-y-pokemon-API.git](https://github.com/Mate0Males/Proyecto-vanilla-y-pokemon-API.git)
+Para iniciar la aplicación desde la terminal, ejecuta el siguiente comando en la raíz del proyecto:
+
+```bash
+./mvnw spring-boot:run
