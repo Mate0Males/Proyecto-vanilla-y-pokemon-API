@@ -1,12 +1,18 @@
 const ENDPOINTS = {
-    pokemon: 'https://pokeapi.co/api/v2/pokemon?limit=24',
-    berry: 'https://pokeapi.co/api/v2/berry?limit=24',
-    item: 'https://pokeapi.co/api/v2/item?limit=24'
+    pokemon: 'https://pokeapi.co/api/v2/pokemon',
+    berry: 'https://pokeapi.co/api/v2/berry',
+    item: 'https://pokeapi.co/api/v2/item'
 };
 
 let currentEndpointKey = 'pokemon';
 let currentData = [];
 let debounceTimer = null;
+
+// Variables para el scroll infinito y paginación
+let offset = 0;
+const limit = 30; // Cantidad de elementos por cada carga
+let isLoading = false;
+let hasMoreData = true;
 
 const pokemonGrid = document.getElementById('artist-grid');
 const searchInput = document.getElementById('search-input');
@@ -16,10 +22,20 @@ const closeActionModalBtn = document.getElementById('close-action-modal-btn');
 const modalBodyContent = document.getElementById('modal-body-content');
 
 document.addEventListener('DOMContentLoaded', () => {
-    fetchData(currentEndpointKey);
+    resetAndFetch(currentEndpointKey);
+    
+    // Escuchar el evento de desplazamiento (scroll) para la carga progresiva
+    window.addEventListener('scroll', () => {
+        // Si el usuario está cerca del final de la página y no está cargando actualmente
+        if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 400) {
+            if (!isLoading && hasMoreData && !searchInput.value) {
+                loadMoreData(currentEndpointKey);
+            }
+        }
+    });
 });
 
-// Switch between the 3 endpoints
+// Cambiar entre pestañas (Pokémon, Berries, Items)
 async function switchEndpoint(key) {
     currentEndpointKey = key;
     searchInput.value = '';
@@ -32,33 +48,83 @@ async function switchEndpoint(key) {
     if (key === 'item') tabId = 'tab-items';
     document.getElementById(tabId).classList.add('active');
 
-    await fetchData(key);
+    await resetAndFetch(key);
 }
 
-async function fetchData(key) {
-    pokemonGrid.innerHTML = '<div class="col-12 text-center text-muted py-4">Loading data from API...</div>';
+// Reiniciar contadores y cargar la primera tanda
+async function resetAndFetch(key) {
+    pokemonGrid.innerHTML = '';
+    currentData = [];
+    offset = 0;
+    hasMoreData = true;
+    await loadMoreData(key);
+}
+
+// Cargar un lote de datos desde la API
+async function loadMoreData(key) {
+    if (isLoading) return;
+    isLoading = true;
+
+    // Mostrar indicador de carga al final si ya hay elementos
+    let loadingIndicator = document.getElementById('loading-indicator');
+    if (!loadingIndicator) {
+        loadingIndicator = document.createElement('div');
+        loadingIndicator.id = 'loading-indicator';
+        loadingIndicator.className = 'col-12 text-center text-muted py-3';
+        loadingIndicator.innerText = 'Loading more data...';
+        pokemonGrid.appendChild(loadingIndicator);
+    }
+
     try {
-        const response = await fetch(ENDPOINTS[key]);
+        const url = `${ENDPOINTS[key]}?offset=${offset}&limit=${limit}`;
+        const response = await fetch(url);
         const data = await response.json();
 
-        currentData = await Promise.all(
+        if (!data.results || data.results.length === 0) {
+            hasMoreData = false;
+            loadingIndicator.remove();
+            isLoading = false;
+            return;
+        }
+
+        // Obtener los detalles de cada elemento del lote actual
+        const detailedBatch = await Promise.all(
             data.results.map(async (item) => {
                 const res = await fetch(item.url);
                 return await res.json();
             })
         );
 
-        renderCards(currentData, key);
+        // Remover indicador temporal antes de pintar
+        loadingIndicator.remove();
+
+        // Acumular en la lista global y renderizar solo el nuevo lote
+        currentData = currentData.concat(detailedBatch);
+        renderCards(detailedBatch, key, true); // true para acumular (append)
+
+        offset += limit;
+        
+        // Si ya superamos el total de la API, detenemos
+        if (offset >= data.count) {
+            hasMoreData = false;
+        }
     } catch (error) {
         console.error('Error fetching API:', error);
-        pokemonGrid.innerHTML = '<div class="col-12 text-center text-danger py-4">Error loading data.</div>';
+        if (loadingIndicator) loadingIndicator.innerText = 'Error loading more data.';
+    } finally {
+        isLoading = false;
     }
 }
 
-function renderCards(items, type) {
-    pokemonGrid.innerHTML = '';
+function renderCards(items, type, append = false) {
+    if (!append) {
+        pokemonGrid.innerHTML = '';
+    }
+
     if (!items || items.length === 0) {
-        pokemonGrid.innerHTML = '<div class="col-12 text-center text-muted py-4 fst-italic">No results found.</div>';
+        if (!append) {
+            pokemonGrid.innerHTML = '<div class="col-12 text-center text-muted py-4 fst-italic">No results found.</div>';
+        }
         return;
     }
 
@@ -77,7 +143,6 @@ function renderCards(items, type) {
         } else if (type === 'berry') {
             title = item.name.charAt(0).toUpperCase() + item.name.slice(1) + ' Berry';
             subtitle = `Firmness: ${item.firmness.name}`;
-            // Use item.item.name from API response to fetch official sprite correctly
             const berryItemName = item.item ? item.item.name : `${item.name}-berry`;
             imageUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${berryItemName}.png`;
         } else if (type === 'item') {
@@ -103,7 +168,7 @@ function renderCards(items, type) {
     });
 }
 
-// Search with 4-second debounce delay
+// Búsqueda con debounce de 4 segundos
 searchInput.addEventListener('input', (e) => {
     const searchTerm = e.target.value.toLowerCase();
 
@@ -113,14 +178,18 @@ searchInput.addEventListener('input', (e) => {
     debounceTimer = setTimeout(() => {
         debounceStatus.innerText = `Search applied for: "${searchTerm}"`;
 
+        if (!searchTerm) {
+            renderCards(currentData, currentEndpointKey, false);
+            return;
+        }
+
         const filtered = currentData.filter(item => {
             return item.name.toLowerCase().includes(searchTerm) || (item.id && item.id.toString() === searchTerm);
         });
 
-        renderCards(filtered, currentEndpointKey);
+        renderCards(filtered, currentEndpointKey, false);
     }, 4000);
 });
-
 
 function showModal(item, type, imageUrl) {
     let content = '';
