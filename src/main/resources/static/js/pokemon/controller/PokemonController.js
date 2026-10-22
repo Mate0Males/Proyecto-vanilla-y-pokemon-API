@@ -4,7 +4,8 @@ import { PokemonUI } from '../ui/PokemonUI.js';
 export class PokemonController {
     constructor() {
         this.service = new PokemonService();
-        this.ui = new PokemonUI("artist-grid", "action-modal");
+        // Inyectamos el servicio al UI para que pueda resolver las evoluciones anidadas en el modal
+        this.ui = new PokemonUI("artist-grid", "action-modal", this.service);
 
         this.currentEndpointKey = 'pokemon';
         this.currentData = [];

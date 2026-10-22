@@ -1,9 +1,10 @@
 export class PokemonUI {
-    constructor(gridContainerId, modalId) {
+    constructor(gridContainerId, modalId, pokemonService = null) {
         this.gridContainer = document.getElementById(gridContainerId);
         this.modalElement = document.getElementById(modalId);
         this.modalBodyContent = document.getElementById('modal-body-content');
         this.closeModalBtn = document.getElementById('close-action-modal-btn');
+        this.pokemonService = pokemonService;
 
         if (this.closeModalBtn && this.modalElement) {
             this.closeModalBtn.addEventListener('click', () => this.hideModal());
@@ -46,7 +47,7 @@ export class PokemonUI {
         });
     }
 
-    showModal(item) {
+    async showModal(item) {
         if (!this.modalElement) return;
         const data = item.raw;
         let content = '';
@@ -63,7 +64,9 @@ export class PokemonUI {
                 <div class="mb-3">${types}</div>
                 <div class="text-start bg-light p-3 rounded-3 small">
                     <p class="mb-1"><strong>Height:</strong> ${data.height / 10} m</p>
-                    <p class="mb-0"><strong>Weight:</strong> ${data.weight / 10} kg</p>
+                    <p class="mb-1"><strong>Weight:</strong> ${data.weight / 10} kg</p>
+                    <hr class="my-2">
+                    <p class="mb-0" id="modal-evolutions-container"><strong>Evolution Line:</strong> <span class="text-muted">Loading evolutions...</span></p>
                 </div>
             `;
         } else if (item.endpoint === 'berry') {
@@ -89,6 +92,16 @@ export class PokemonUI {
 
         this.modalBodyContent.innerHTML = content;
         this.modalElement.style.display = 'block';
+
+        if (item.endpoint === 'pokemon' && this.pokemonService) {
+            const evolutions = await this.pokemonService.getPokemonEvolutions(data.id);
+            const evoContainer = document.getElementById('modal-evolutions-container');
+            if (evoContainer) {
+                evoContainer.innerHTML = evolutions.length > 0
+                    ? `<strong>Evolution Line:</strong> <span class="text-capitalize">${evolutions.join(' ➔ ')}</span>`
+                    : `<strong>Evolution Line:</strong> <span class="text-muted">None</span>`;
+            }
+        }
     }
 
     hideModal() {

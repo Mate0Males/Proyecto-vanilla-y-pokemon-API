@@ -36,4 +36,32 @@ export class PokemonService {
             return { count: 0, items: [] };
         }
     }
+
+    async getPokemonEvolutions(pokemonIdOrName) {
+        try {
+            const pokemonRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonIdOrName}`);
+            const pokemonData = await pokemonRes.json();
+
+            // Petición anidada 1: Especie
+            const speciesRes = await fetch(pokemonData.species.url);
+            const speciesData = await speciesRes.json();
+
+            // Petición anidada 2: Cadena de evolución
+            const evolutionRes = await fetch(speciesData.evolution_chain.url);
+            const evolutionData = await evolutionRes.json();
+
+            const evolutions = [];
+            let currentChain = evolutionData.chain;
+
+            while (currentChain) {
+                evolutions.push(currentChain.species.name);
+                currentChain = currentChain.evolves_to.length > 0 ? currentChain.evolves_to[0] : null;
+            }
+
+            return evolutions;
+        } catch (error) {
+            console.error("Error obteniendo evoluciones:", error);
+            return [];
+        }
+    }
 }
