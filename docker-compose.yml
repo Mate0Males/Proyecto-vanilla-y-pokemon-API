@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # 1. Base de Datos PostgreSQL
   postgres-db:
     image: postgres:15-alpine
     container_name: postgres-container
@@ -15,32 +14,17 @@ services:
       - pokemon-net
     restart: always
 
-  # 2. Aplicación Spring Boot (Backend + Frontend)
   pokemon-app:
     image: mateomales/pokemon-app:latest
     container_name: pokemon-container
-    expose:
-      - "8080"
+    ports:
+      - "8080:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-container:5432/gestor_tareas_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin
     depends_on:
       - postgres-db
-    networks:
-      - pokemon-net
-    restart: always
-
-  # 3. API Gateway con Nginx (Escuchando en el puerto 8000 permitido por AWS Academy)
-  nginx-gateway:
-    image: nginx:alpine
-    container_name: nginx-container
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - pokemon-app
     networks:
       - pokemon-net
     restart: always
