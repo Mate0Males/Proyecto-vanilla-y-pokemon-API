@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # 1. Base de Datos PostgreSQL
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: postgres-container
+    environment:
+      POSTGRES_DB: gestor_tareas_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+    networks:
+      - pokemon-net
+    restart: always
+
+  # 2. Aplicación Spring Boot (Backend + Frontend)
+  pokemon-app:
+    build: .
+    container_name: pokemon-container
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-container:5432/gestor_tareas_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
+    depends_on:
+      - postgres-db
+    networks:
+      - pokemon-net
+    restart: always
+
+networks:
+  pokemon-net:
+    driver: bridge
