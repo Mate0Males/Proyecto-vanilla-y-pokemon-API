@@ -31,12 +31,12 @@ services:
       - pokemon-net
     restart: always
 
-  # 3. API Gateway con Nginx
+  # 3. API Gateway con Nginx (Escuchando en el puerto 8000 permitido por AWS Academy)
   nginx-gateway:
     image: nginx:alpine
     container_name: nginx-container
     ports:
-      - "80:80"
+      - "8000:8000"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
